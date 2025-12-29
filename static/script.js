@@ -163,19 +163,57 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function populateTags() {
-        // Populate Filter Dropdown
+        // Populate Filter Dropdown (Now Manage Tags)
         const filterMenu = document.querySelector('#filterDropdown .dropdown-menu');
         if (filterMenu) {
             const currentFilter = filterDropdown.dataset.value || 'all';
             filterMenu.innerHTML = '<div class="dropdown-item" data-value="all">All Tags</div>';
+
             tags.forEach(tag => {
                 const filterItem = document.createElement('div');
                 filterItem.className = 'dropdown-item';
                 if (tag.name === currentFilter) filterItem.classList.add('active');
                 filterItem.dataset.value = tag.name;
-                filterItem.textContent = tag.name;
+
+                const textSpan = document.createElement('span');
+                textSpan.textContent = tag.name;
+                filterItem.appendChild(textSpan);
+
+                // Delete Button (x)
+                const deleteBtn = document.createElement('div');
+                deleteBtn.className = 'delete-tag-btn';
+                deleteBtn.textContent = '×';
+                deleteBtn.title = 'Delete Tag';
+                deleteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (confirm(`Delete tag "${tag.name}"?`)) {
+                        deleteTagAPI(tag.name);
+                    }
+                });
+                filterItem.appendChild(deleteBtn);
+
                 filterMenu.appendChild(filterItem);
             });
+
+            // Add New Tag Option
+            const addTagItem = document.createElement('div');
+            addTagItem.className = 'dropdown-item add-tag-item';
+            addTagItem.innerHTML = '<span>+ Add New Tag</span>';
+            addTagItem.style.borderTop = '1px solid var(--gold-dim)';
+            addTagItem.style.color = 'var(--gold)';
+            addTagItem.style.fontWeight = 'bold';
+            addTagItem.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const newTagName = prompt("Enter new tag name:");
+                if (newTagName) {
+                    const hue = Math.floor(Math.random() * 360);
+                    const color = `hsl(${hue}, 70%, 30%)`;
+                    addTagAPI(newTagName, color);
+                }
+                closeAllDropdowns();
+            });
+            filterMenu.appendChild(addTagItem);
+
             // Reset active class for 'All' if needed
             if (currentFilter === 'all') filterMenu.querySelector('[data-value="all"]').classList.add('active');
         }
@@ -193,17 +231,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 textSpan.textContent = tag.name;
                 tagItem.appendChild(textSpan);
 
-                const deleteBtn = document.createElement('div');
-                deleteBtn.className = 'delete-tag-btn';
-                deleteBtn.textContent = '×';
-                deleteBtn.title = 'Delete Tag';
-                deleteBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    if (confirm(`Delete tag "${tag.name}"?`)) {
-                        deleteTagAPI(tag.name);
-                    }
-                });
-                tagItem.appendChild(deleteBtn);
                 tagMenu.appendChild(tagItem);
             });
         }
@@ -213,44 +240,53 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function setupDropdowns() {
         document.querySelectorAll('.custom-dropdown').forEach(dropdown => {
-            // Clone to remove old listeners
-            const newDropdown = dropdown.cloneNode(true);
-            dropdown.parentNode.replaceChild(newDropdown, dropdown);
+            // Avoid cloning to preserve listeners attached in populateTags
+            // Just attach trigger listener if not already attached (or overwrite onclick)
 
-            const trigger = newDropdown.querySelector('.dropdown-trigger');
-            const items = newDropdown.querySelectorAll('.dropdown-item');
+            const trigger = dropdown.querySelector('.dropdown-trigger');
+            const items = dropdown.querySelectorAll('.dropdown-item');
 
             trigger.onclick = (e) => {
                 e.stopPropagation();
+                const isOpen = dropdown.classList.contains('open');
                 closeAllDropdowns();
-                newDropdown.classList.toggle('open');
+                if (!isOpen) dropdown.classList.add('open');
             };
 
             items.forEach(item => {
-                item.onclick = () => {
-                    const value = item.dataset.value;
-                    const text = item.textContent.replace('×', '').trim();
+                // Only attach selection logic if it's not the "Add Tag" button
+                if (item.classList.contains('add-tag-item')) return;
 
-                    newDropdown.querySelector('.selected-value').textContent = text;
-                    newDropdown.dataset.value = value;
+                // Preserve existing click listeners (like delete button) by not overwriting onclick of children
+                // But we need to handle the item selection click.
+                // Best way: Add event listener to item, but ensure delete button stops propagation.
+
+                // Remove old listener if any (hard to do without reference), so we'll use a property flag or just overwrite onclick
+                // Since we rebuild items in populateTags, they are fresh.
+
+                item.onclick = (e) => {
+                    // If clicked on delete button, do nothing (handled by its own listener with stopPropagation)
+                    if (e.target.classList.contains('delete-tag-btn')) return;
+
+                    const value = item.dataset.value;
+                    // Get text but ignore the delete button text
+                    const textSpan = item.querySelector('span');
+                    const text = textSpan ? textSpan.textContent : item.textContent;
+
+                    dropdown.querySelector('.selected-value').textContent = text;
+                    dropdown.dataset.value = value;
 
                     items.forEach(i => i.classList.remove('active'));
                     item.classList.add('active');
 
-                    newDropdown.classList.remove('open');
+                    dropdown.classList.remove('open');
 
-                    if (newDropdown.id === 'filterDropdown') {
+                    if (dropdown.id === 'filterDropdown') {
                         filterNotes();
                     }
                 };
             });
         });
-
-        // Re-assign global variables if elements were replaced
-        // Actually, replacing nodes breaks references. Better to just attach listeners carefully.
-        // For this quick fix, let's just assume simple attachment is fine or handle duplicates.
-        // Re-querying needed elements:
-        // filterDropdown = document.getElementById('filterDropdown'); // const cannot be reassigned
     }
 
     function closeAllDropdowns() {
@@ -286,6 +322,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const img = document.createElement('img');
             img.src = data.image;
             img.classList.add('note-image');
+            img.draggable = false; // Prevent native drag
             note.appendChild(img);
         }
 
@@ -548,17 +585,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Tag & Player Management
-    if (addTagBtn) {
-        addTagBtn.addEventListener('click', () => {
-            const newTagName = prompt("Enter new tag name:");
-            if (newTagName) {
-                const hue = Math.floor(Math.random() * 360);
-                const color = `hsl(${hue}, 70%, 30%)`;
-                addTagAPI(newTagName, color);
-            }
-        });
-    }
-
     if (playerInput && suggestionsList) {
         playerInput.addEventListener('input', () => {
             const val = playerInput.value.toLowerCase();
