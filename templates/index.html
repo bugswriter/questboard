@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuestBoard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+    <div class="freeze-overlay"></div>
+
+    <div class="top-bar">
+        <div class="logo">Quest Board ⚔️</div>
+        <div class="controls">
+            <!-- Custom Dropdown for Filter -->
+            <div class="custom-dropdown" id="filterDropdown">
+                <div class="dropdown-trigger">
+                    <span class="selected-value">All Tags</span>
+                    <span class="arrow">▼</span>
+                </div>
+                <div class="dropdown-menu">
+                    <div class="dropdown-item active" data-value="all">All Tags</div>
+                    <!-- Tags will be populated here -->
+                </div>
+            </div>
+
+            <button id="addTagBtn" class="icon-btn" title="Add New Tag">+</button>
+            <button id="lockBtn" class="icon-btn" title="Lock Board">🔓</button>
+        </div>
+    </div>
+
+    <!-- Zoom Controls -->
+    <div class="zoom-controls">
+        <button id="fitBtn" title="Fit to Screen">⛶</button>
+        <button id="zoomInBtn">+</button>
+        <span id="zoomLevel">100%</span>
+        <button id="zoomOutBtn">-</button>
+    </div>
+
+    <div class="viewport" id="viewport">
+        <div class="board" id="board">
+
+            <div class="quadrant q-todo"><span>TODO</span></div>
+            <div class="quadrant q-blocked"><span>BLOCKED</span></div>
+            <div class="quadrant q-future"><span>FUTURE</span></div>
+            <div class="quadrant q-done"><span>DONE</span></div>
+            <!-- Notes will be added here -->
+        </div>
+    </div>
+
+    <button class="add-btn" id="addBtn">+</button>
+
+    <div class="modal-overlay" id="scrollModalOverlay">
+        <div class="scroll-modal">
+            <button class="close-scroll-btn" id="closeScrollBtn">×</button>
+            <div class="scroll-content-wrapper">
+                <h2 id="scrollTitle">Quest Details</h2>
+                <div class="scroll-body">
+                    <img id="scrollImage" src="" alt="Quest Sketch" class="scroll-image hidden">
+                    <p id="scrollText"></p>
+                </div>
+                <div class="scroll-footer">
+                    <span id="scrollTag" class="scroll-tag"></span>
+                    <div class="scroll-meta">
+                        <span id="scrollAssignee"></span>
+                        <span id="scrollDate"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <h2>New Task</h2>
+            <textarea id="taskInput" placeholder="What needs to be done?"></textarea>
+
+            <div class="input-row">
+                <div class="tag-input-container">
+                    <label>Tag</label>
+                    <div class="custom-dropdown" id="tagDropdown">
+                        <div class="dropdown-trigger">
+                            <span class="selected-value">Select Tag</span>
+                            <span class="arrow">▼</span>
+                        </div>
+                        <div class="dropdown-menu">
+                            <!-- Tags will be populated here -->
+                        </div>
+                    </div>
+                </div>
+                <div class="date-input-container">
+                    <label>Player Name</label>
+                    <div class="player-input-wrapper">
+                        <input type="text" id="playerInput" placeholder="Type name..." autocomplete="off">
+                        <button id="savePlayerBtn" title="Save to Roster">+</button>
+                        <div id="playerSuggestions" class="suggestions-list"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-row">
+                <div class="file-input-container">
+                    <label for="imageInput" class="file-upload-btn">
+                        <span>📎 Attach Sketch</span>
+                    </label>
+                    <input type="file" id="imageInput" accept="image/*">
+                    <span id="fileNameDisplay" class="file-name">No sketch attached</span>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button class="cancel-btn" id="cancelBtn">Cancel</button>
+                <button class="save-btn" id="saveBtn">Stick It!</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+
+</html>
